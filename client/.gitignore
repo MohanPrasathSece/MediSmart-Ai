@@ -1,0 +1,22 @@
+# Frontend specific ignores (React / Vite / CRA)
+
+# Dependency directory
+node_modules/
+
+# Build output
+/build
+/dist
+
+# Env variables
+.env*
+
+# Coverage
+coverage/
+
+# Logs
+*.log
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/

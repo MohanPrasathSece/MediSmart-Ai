@@ -57,7 +57,7 @@ const OrderManagement = () => {
     }
 
     try {
-      const response = await api.put(`/pharmacy/orders/${orderId}/assign-delivery`, { deliveryBoyId });
+            const response = await api.put(`/orders/${orderId}/assign-delivery`, { deliveryBoyId });
       const updatedOrder = response.data;
       const newOrders = orders.map(o => o._id === updatedOrder._id ? updatedOrder : o);
       setOrders(newOrders);
@@ -186,19 +186,18 @@ const OrderManagement = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-secondary-200">
+                        <tbody className="bg-white divide-y divide-secondary-200">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-4 text-center">Loading orders...</td>
+                  <td colSpan="6" className="px-6 py-4 text-center">Loading orders...</td>
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-4 text-center text-secondary-500">No orders found.</td>
+                  <td colSpan="6" className="px-6 py-4 text-center text-secondary-500">No orders found.</td>
                 </tr>
               ) : (
                 orders.map((order) => (
                   <tr key={order._id} className="hover:bg-secondary-50">
-                    
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <User size={16} className="text-secondary-400" />
@@ -221,16 +220,20 @@ const OrderManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-secondary-900">
-                      ₹{order.totalAmount}
+                      ₹{order.pricing?.total?.toFixed(2) || 'N/A'}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
                         {getStatusIcon(order.status)}
-                        {order.status.replace('_', ' ').toUpperCase()}
+                        {order.status.replace(/_/g, ' ').toUpperCase()}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      {order.deliveryBoy ? (
+                      {order.status === 'pending_acceptance' && order.deliveryBoy ? (
+                        <div className="text-sm text-secondary-600">
+                          Awaiting <span className="font-semibold">{order.deliveryBoy.name}</span>
+                        </div>
+                      ) : order.deliveryBoy ? (
                         <div className="flex items-center gap-2">
                           <Truck size={16} className="text-secondary-400" />
                           <div>
@@ -242,8 +245,9 @@ const OrderManagement = () => {
                         <select
                           onChange={(e) => setSelectedDeliveryBoy({ ...selectedDeliveryBoy, [order._id]: e.target.value })}
                           className="w-full px-2 py-1 border border-secondary-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                          disabled={order.status !== 'ready'}
                         >
-                          <option value="">Select delivery boy...</option>
+                          <option value="">Select...</option>
                           {deliveryBoys.map(db => (
                             <option key={db._id} value={db._id}>{db.name}</option>
                           ))}
@@ -253,44 +257,26 @@ const OrderManagement = () => {
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">
                         {order.status === 'pending' && (
-                          <button
-                            onClick={() => updateOrderStatus(order._id, 'confirmed')}
-                            className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
-                          >
-                            Confirm
-                          </button>
+                          <button onClick={() => updateOrderStatus(order._id, 'confirmed')} className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">Confirm</button>
                         )}
                         {order.status === 'confirmed' && (
-                          <button
-                            onClick={() => updateOrderStatus(order._id, 'preparing')}
-                            className="text-xs bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700"
-                          >
-                            Prepare
-                          </button>
+                          <button onClick={() => updateOrderStatus(order._id, 'preparing')} className="text-xs bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700">Prepare</button>
                         )}
                         {order.status === 'preparing' && (
-                          <button
-                            onClick={() => updateOrderStatus(order._id, 'ready')}
-                            className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700"
-                          >
-                            Ready
-                          </button>
+                          <button onClick={() => updateOrderStatus(order._id, 'ready')} className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">Ready</button>
                         )}
                         {order.status === 'ready' && !order.deliveryBoy && (
-                          <button
-                            onClick={() => assignDeliveryBoy(order._id)}
-                            className="text-xs bg-indigo-600 text-white px-2 py-1 rounded hover:bg-indigo-700"
-                          >
-                            Assign Delivery
-                          </button>
+                          <button onClick={() => assignDeliveryBoy(order._id)} className="text-xs bg-indigo-600 text-white px-2 py-1 rounded hover:bg-indigo-700">Assign</button>
                         )}
                         {order.status === 'assigned' && (
-                          <button
-                            onClick={() => updateOrderStatus(order._id, 'out_for_delivery')}
-                            className="text-xs bg-orange-600 text-white px-2 py-1 rounded hover:bg-orange-700"
-                          >
-                            Dispatch
-                          </button>
+                          <button onClick={() => updateOrderStatus(order._id, 'out_for_delivery')} className="text-xs bg-orange-600 text-white px-2 py-1 rounded hover:bg-orange-700">Dispatch</button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
                         )}
                       </div>
                     </td>

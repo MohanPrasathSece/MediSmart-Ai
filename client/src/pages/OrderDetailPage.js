@@ -53,7 +53,30 @@ const OrderDetailPage = () => {
       },
       onError: (error) => {
         console.error('Error assigning delivery boy:', error);
-        alert('Failed to assign delivery boy.');
+                const errorMessage = error.response?.data?.message || 'An unknown error occurred.';
+        alert(`Failed to assign delivery boy: ${errorMessage}`);
+      }
+    }
+  );
+
+    const acceptOrderMutation = useMutation(
+    () => api.put(`/delivery/orders/${id}/accept`),
+    {
+      onSuccess: () => refetch(),
+      onError: (error) => {
+        console.error('Error accepting order:', error);
+        alert('Failed to accept order.');
+      }
+    }
+  );
+
+  const rejectOrderMutation = useMutation(
+    () => api.put(`/delivery/orders/${id}/reject`),
+    {
+      onSuccess: () => refetch(),
+      onError: (error) => {
+        console.error('Error rejecting order:', error);
+        alert('Failed to reject order.');
       }
     }
   );
@@ -134,6 +157,33 @@ const OrderDetailPage = () => {
               ) : (
                 <p>No delivery boys available at the moment.</p>
               )}
+                         {/* Delivery Boy Action Section */}
+          {user?.role === 'delivery_boy' && order?.status === 'pending_acceptance' && order.deliveryBoy === user.id && (
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold mb-4">New Delivery Request</h2>
+              <p className="mb-4">You have a new delivery request from {order.pharmacy.name}.</p>
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => acceptOrderMutation.mutate()}
+                  disabled={acceptOrderMutation.isLoading || rejectOrderMutation.isLoading}
+                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 disabled:bg-secondary-300"
+                >
+                  {acceptOrderMutation.isLoading ? 'Accepting...' : 'Accept'}
+                </button>
+                <button
+                  onClick={() => rejectOrderMutation.mutate()}
+                  disabled={acceptOrderMutation.isLoading || rejectOrderMutation.isLoading}
+                  className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:bg-secondary-300"
+                >
+                  {rejectOrderMutation.isLoading ? 'Rejecting...' : 'Reject'}
+                </button>
+              </div>
+              {(acceptOrderMutation.isError || rejectOrderMutation.isError) && (
+                 <p className="text-red-500 mt-2">{acceptOrderMutation.error?.response?.data?.message || rejectOrderMutation.error?.response?.data?.message || 'An error occurred.'}</p>
+              )}
+            </div>
+          )}
+
                {assignDeliveryMutation.isError && (
                 <p className="text-red-500 mt-2">{assignDeliveryMutation.error.response?.data?.message || 'An error occurred.'}</p>
               )}
